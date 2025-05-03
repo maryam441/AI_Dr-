@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}AI Doctor{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --medical-blue: #1a73e8;
+      --medical-blue-dark: #0d47a1;
+      --glass-bg: rgba(15, 23, 42, 0.92);
+      --glass-border: rgba(255, 255, 255, 0.12);
+    }
+    
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .bg-image {
+      background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      filter: brightness(0.4) contrast(1.1);
+    }
+    
+    .bg-overlay {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 41, 102, 0.65) 100%);
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    
+    .content-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .glass-card {
+      background: var(--glass-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+    
+    .glass-card:hover {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transform: translateY(-2px);
+    }
+    
+    .navbar {
+      background: var(--glass-bg) !important;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    
+    .nav-link {
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-medical {
+      background-color: var(--medical-blue);
+      border-color: var(--medical-blue);
+      color: white;
+      font-weight: 500;
+      padding: 0.5rem 1.5rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-medical:hover {
+      background-color: var(--medical-blue-dark);
+      border-color: var(--medical-blue-dark);
+      transform: translateY(-1px);
+    }
+    
+    .alert {
+      backdrop-filter: blur(8px);
+      background: var(--glass-bg) !important;
+      border: 1px solid var(--glass-border);
+      border-left: 4px solid;
+    }
+    
+    .alert-success {
+      border-left-color: #28a745;
+    }
+    
+    .alert-danger {
+      border-left-color: #dc3545;
+    }
+    
+    footer {
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      margin-top: auto;
+      border-top: 1px solid var(--glass-border);
+    }
+    
+    /* Text styling */
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 600;
+    }
+    
+    a {
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    
+    /* Form elements */
+    .form-control {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+    
+    .form-control:focus {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--medical-blue);
+      box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="content-wrapper">
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+          <i class="fas fa-heartbeat me-2" style="color: var(--medical-blue);"></i>
+          <span class="fw-bold">AI Doctor</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            {% if current_user.is_authenticated %}
+              {% if current_user.is_admin %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                    <i class="fas fa-user-shield me-1"></i> Admin
+                  </a>
+                </li>
+              {% endif %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('patient_dashboard') }}">
+                  <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('logout') }}">
+                  <i class="fas fa-sign-out-alt me-1"></i> Logout
+                </a>
+              </li>
+            {% else %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('login') }}">
+                  <i class="fas fa-sign-in-alt me-1"></i> Login
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('register') }}">
+                  <i class="fas fa-user-plus me-1"></i> Register
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-5 flex-grow-1">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+              <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %} me-2"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="py-4 text-white-60 text-center">
+      <div class="container">
+        <p class="mb-0">
+          <i class="fas fa-heartbeat me-1" style="color: var(--medical-blue);"></i>
+          &copy; 2023 AI Doctor. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

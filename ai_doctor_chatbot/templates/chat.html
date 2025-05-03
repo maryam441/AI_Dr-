@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+  <div class="transparent-container">
+    <h2 class="text-center text-white">Chat with AI Doctor</h2>
+    <div class="chat-box" id="chat-box" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+      {% for chat in chat_history %}
+        <div class="chat-message">
+          <strong>{{ 'You' if chat.is_user_message else 'AI Doctor' }}:</strong>
+          <p>{{ chat.message }}</p>
+        </div>
+      {% endfor %}
+    </div>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="message" class="form-label text-white">Your Message</label>
+        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Send</button>
+    </form>
+  </div>
+
+  <!-- Auto-scroll JavaScript -->
+  <script>
+    // Function to scroll the chat box to the bottom
+    function scrollToBottom() {
+      const chatBox = document.getElementById('chat-box');
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    // Scroll to the bottom when the page loads or when new messages are added
+    window.onload = scrollToBottom;
+  </script>
+{% endblock %}

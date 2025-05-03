@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Register</h2>
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label for="name">Username</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password (min 8 characters)</label>
+                <div class="password-input">
+                    <input type="password" id="password" name="password" class="form-control" required minlength="8">
+                    <i class="fas fa-eye password-toggle"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <div class="password-input">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required minlength="8">
+                    <i class="fas fa-eye password-toggle"></i>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Register</button>
+        </form>
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

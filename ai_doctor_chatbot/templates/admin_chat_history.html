@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}Chat History{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h2>
+                    <i class="fas fa-comments me-2"></i>
+                    Chat History for {{ patient.name or patient.phone }}
+                </h2>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('admin_patients') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Patients
+                    </a>
+                    <button class="btn btn-outline-primary" id="exportChatBtn">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Patient Details</h5>
+            <span class="badge bg-{{ 'success' if patient.last_active else 'danger' }}">
+                {{ 'Active' if patient.last_active else 'Inactive' }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <p><strong><i class="fas fa-id-card me-2"></i>Patient ID:</strong> {{ patient.id }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong><i class="fas fa-birthday-cake me-2"></i>DOB:</strong> {{ patient.dob or 'N/A' }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong><i class="fas fa-phone me-2"></i>Contact:</strong> {{ patient.phone }}</p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong><i class="fas fa-heartbeat me-2"></i>Last Visit:</strong> {{ patient.last_active or 'Never' }}</p>
+                </div>
+            </div>
+            {% if patient.allergies or patient.medications %}
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    {% if patient.allergies %}
+                    <p class="mb-1"><strong><i class="fas fa-allergies me-2 text-danger"></i>Allergies:</strong></p>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for allergy in patient.allergies.split(',') %}
+                        <span class="badge bg-danger">{{ allergy.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {% if patient.medications %}
+                    <p class="mb-1"><strong><i class="fas fa-pills me-2 text-primary"></i>Medications:</strong></p>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for med in patient.medications.split(',') %}
+                        <span class="badge bg-primary">{{ med.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Conversation History</h5>
+                <small class="text-muted">Showing most recent messages first</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">{{ history|length }} messages</span>
+                <div class="input-group input-group-sm" style="width: 150px;">
+                    <input type="text" class="form-control form-control-sm" placeholder="Search..." id="chatSearch">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body chat-history p-0 position-relative">
+            {% if history %}
+            <div class="position-sticky top-0 bg-white p-2 border-bottom d-flex justify-content-between align-items-center">
+                <small class="text-muted">Showing {{ history|length }} messages</small>
+                <button class="btn btn-sm btn-outline-secondary" id="scrollToBottom">
+                    <i class="fas fa-arrow-down"></i> Jump to Bottom
+                </button>
+            </div>
+            {% endif %}
+            
+            <div id="chatMessagesContainer">
+                {% for message in history %}
+                <div class="message {% if message.is_user_message %}user-message{% else %}ai-message{% endif %} p-3 position-relative">
+                    {% if message.is_flagged %}
+                    <span class="position-absolute top-0 end-0 mt-1 me-2 text-danger" title="Flagged message">
+                        <i class="fas fa-flag"></i>
+                    </span>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="message-icon me-2">
+                                {% if message.is_user_message %}
+                                <i class="fas fa-user-circle text-primary"></i>
+                                {% else %}
+                                <i class="fas fa-robot text-secondary"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <strong>{% if message.is_user_message %}{{ patient.name or patient.phone }}{% else %}AI Doctor{% endif %}</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <small class="text-muted">{{ message.timestamp }}</small>
+                            <button class="btn btn-sm btn-link text-muted p-0 ms-1" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" data-message-id="{{ message.id }}"><i class="fas fa-flag me-2"></i>Flag message</a></li>
+                                <li><a class="dropdown-item" href="#" data-message-id="{{ message.id }}"><i class="fas fa-copy me-2"></i>Copy text</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="message-content ps-4">
+                        {{ message.message if message.is_user_message else message.response }}
+                    </div>
+                </div>
+                {% if not loop.last %}
+                <hr class="my-1 mx-3">
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-comment-slash fa-2x mb-3"></i>
+                    <p>No chat history found for this patient</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if history|length > 10 %}
+        <div class="card-footer bg-light py-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Showing {{ history|length }} most recent messages</small>
+                <a href="#" class="btn btn-sm btn-outline-primary">Load older messages</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export Chat History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Format</label>
+                    <select class="form-select" id="exportFormat">
+                        <option value="pdf">PDF Document</option>
+                        <option value="csv">CSV Spreadsheet</option>
+                        <option value="json">JSON Data</option>
+                        <option value="txt">Plain Text</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date Range</label>
+                    <div class="input-group">
+                        <input type="date" class="form-control" id="exportStartDate">
+                        <span class="input-group-text">to</span>
+                        <input type="date" class="form-control" id="exportEndDate">
+                    </div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
+                    <label class="form-check-label" for="includeMetadata">Include message metadata</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmExport">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.chat-history {
+    max-height: 65vh;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+}
+
+.message {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.message:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.user-message {
+    background-color: rgba(13, 110, 253, 0.05);
+    border-left: 3px solid var(--bs-primary);
+}
+
+.ai-message {
+    background-color: rgba(108, 117, 125, 0.03);
+    border-left: 3px solid var(--bs-secondary);
+}
+
+.message-icon {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+}
+
+.message-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6;
+}
+
+.message[data-is-flagged="true"] {
+    background-color: rgba(220, 53, 69, 0.08);
+    border-left-color: var(--bs-danger);
+}
+
+@media (max-width: 768px) {
+    .chat-history {
+        max-height: none;
+        height: auto;
+    }
+    
+    .card-header, .card-footer {
+        padding: 0.75rem;
+    }
+    
+    .message {
+        padding: 1rem;
+    }
+    
+    .message-content {
+        padding-left: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to bottom button
+    const scrollToBottomBtn = document.getElementById('scrollToBottom');
+    if (scrollToBottomBtn) {
+        scrollToBottomBtn.addEventListener('click', function() {
+            const chatHistory = document.querySelector('.chat-history');
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        });
+    }
+    
+    // Export chat functionality
+    const exportChatBtn = document.getElementById('exportChatBtn');
+    if (exportChatBtn) {
+        exportChatBtn.addEventListener('click', function() {
+            const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+            exportModal.show();
+        });
+    }
+    
+    // Search functionality
+    const chatSearch = document.getElementById('chatSearch');
+    if (chatSearch) {
+        chatSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(message => {
+                const content = message.querySelector('.message-content').textContent.toLowerCase();
+                if (content.includes(searchTerm)) {
+                    message.style.display = 'block';
+                    message.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    message.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Copy message text
+    document.querySelectorAll('[data-message-id]').forEach(btn => {
+        if (btn.textContent.includes('Copy')) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const messageId = this.getAttribute('data-message-id');
+                const messageContent = document.querySelector(`.message[data-id="${messageId}"] .message-content`).textContent;
+                
+                navigator.clipboard.writeText(messageContent).then(() => {
+                    const toast = new bootstrap.Toast(document.createElement('div'));
+                    toast._element.classList.add('toast', 'align-items-center', 'text-white', 'bg-success');
+                    toast._element.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                Message copied to clipboard
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.body.appendChild(toast._element);
+                    toast.show();
+                    
+                    setTimeout(() => {
+                        toast.dispose();
+                        toast._element.remove();
+                    }, 2000);
+                });
+            });
+        }
+    });
+    
+    // Flag message
+    document.querySelectorAll('[data-message-id]').forEach(btn => {
+        if (btn.textContent.includes('Flag')) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const messageId = this.getAttribute('data-message-id');
+                fetch('/admin/chat/flag/' + messageId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const messageElement = document.querySelector(`.message[data-id="${messageId}"]`);
+                        if (messageElement) {
+                            messageElement.setAttribute('data-is-flagged', 'true');
+                            messageElement.insertAdjacentHTML('beforeend', `
+                                <div class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Flagged</strong> - This message has been reported
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        }
+                    }
+                });
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

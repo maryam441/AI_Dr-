@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center">🛠️ Admin Dashboard</h1>
+  <p class="text-muted text-center mb-4">Last updated: {{ current_time }}</p>
+
+  <div class="row g-4">
+    <!-- Total Patients -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white shadow-lg border-0 transparent-container h-100">
+        <div class="card-body text-center">
+          <h4><i class="fas fa-users me-2"></i>Total Patients</h4>
+          <p class="display-5 my-3">{{ users|length }}</p>
+          <a href="{{ url_for('admin_patients') }}" class="btn btn-primary">Manage Patients</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white shadow-lg border-0 transparent-container h-100">
+        <div class="card-body">
+          <h4><i class="fas fa-comments me-2"></i>Recent Activity</h4>
+          <ul class="list-unstyled small mt-3 mb-4">
+            {% for user in users[:5] %}
+            <li class="mb-2">
+              <strong>{{ user.name }}</strong> –
+              <span class="text-muted">{{ user.last_active|time_ago if user.last_active else 'never' }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <a href="{{ url_for('admin_patients') }}" class="btn btn-outline-light">View All</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Patient -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white shadow-lg border-0 transparent-container h-100">
+        <div class="card-body text-center">
+          <h4><i class="fas fa-plus-circle me-2"></i>Add New Patient</h4>
+          <p class="my-3">Create a new patient account.</p>
+          <a href="{{ url_for('admin_create_patient') }}" class="btn btn-success">Create Patient</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Stats -->
+  <div class="card bg-dark text-white shadow-lg border-0 transparent-container mt-5 p-4">
+    <h4 class="mb-4">📊 System Statistics</h4>
+    <div class="row text-center">
+      <div class="col-md-4 mb-3">
+        <div class="stat-item py-3 rounded bg-secondary bg-opacity-25">
+          <div class="stat-label mb-1">Active Today</div>
+          <div class="stat-value fs-3 fw-bold text-success">12</div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="stat-item py-3 rounded bg-secondary bg-opacity-25">
+          <div class="stat-label mb-1">Total Chats</div>
+          <div class="stat-value fs-3 fw-bold text-info">1,245</div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="stat-item py-3 rounded bg-secondary bg-opacity-25">
+          <div class="stat-label mb-1">Avg. Response Time</div>
+          <div class="stat-value fs-3 fw-bold text-warning">3.2s</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

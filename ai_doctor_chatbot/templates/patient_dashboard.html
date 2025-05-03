@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4 text-center">👋 Welcome, {{ current_user.name }}</h1>
+
+  {% if patient_profile %}
+  <div class="card bg-dark text-white mb-4 shadow-lg border-0 transparent-container">
+    <div class="card-body">
+      <h4 class="card-title">🩺 My Profile Summary</h4>
+      <p class="card-text"><strong>Date of Birth:</strong> {{ patient_profile.dob or 'Not specified' }}</p>
+      <p class="card-text"><strong>Gender:</strong> {{ patient_profile.gender or 'Not specified' }}</p>
+      <a href="{{ url_for('patient_profile') }}" class="btn btn-outline-light mt-2">View Full Profile</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Quick Chat -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white h-100 shadow-lg border-0 transparent-container">
+        <div class="card-body d-flex flex-column">
+          <h4 class="card-title"><i class="fas fa-comments me-2"></i>Quick Chat</h4>
+          <p class="card-text flex-grow-1">Start a new conversation with our AI doctor.</p>
+          <a href="{{ url_for('chat') }}" class="btn btn-primary mt-auto">Start Chat</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Profile -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white h-100 shadow-lg border-0 transparent-container">
+        <div class="card-body d-flex flex-column">
+          <h4 class="card-title"><i class="fas fa-user me-2"></i>My Profile</h4>
+          <p class="card-text flex-grow-1">View and update your personal information.</p>
+          <a href="{{ url_for('patient_profile') }}" class="btn btn-primary mt-auto">View Profile</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat History -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white h-100 shadow-lg border-0 transparent-container">
+        <div class="card-body d-flex flex-column">
+          <h4 class="card-title"><i class="fas fa-history me-2"></i>Chat History</h4>
+          {% if recent_chats %}
+            <ul class="list-unstyled chat-history small flex-grow-1">
+              {% for chat in recent_chats %}
+                <li class="mb-2">
+                  <strong>{{ chat.message if chat.is_user_message else chat.response }}</strong><br>
+                  <span class="text-muted">{{ chat.timestamp.strftime('%b %d, %Y %I:%M %p') }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="flex-grow-1">No recent chats found.</p>
+          {% endif %}
+          <a href="{{ url_for('chat') }}" class="btn btn-outline-light mt-auto">View All</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

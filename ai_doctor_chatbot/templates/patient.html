@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>My Profile</h1>
+    </div>
+
+    <div class="profile-card">
+        <form method="POST" action="{{ url_for('patient_profile') }}">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ current_user.name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" class="form-control" value="{{ user_profile.dob if user_profile and user_profile.dob }}">
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" class="form-control">
+                    <option value="">Select Gender</option>
+                    <option value="male" {% if user_profile and user_profile.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if user_profile and user_profile.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if user_profile and user_profile.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="allergies">Allergies</label>
+                <textarea id="allergies" name="allergies" class="form-control" rows="3">{{ user_profile.allergies if user_profile and user_profile.allergies }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="medications">Current Medications</label>
+                <textarea id="medications" name="medications" class="form-control" rows="3">{{ user_profile.medications if user_profile and user_profile.medications }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

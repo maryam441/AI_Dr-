@@ -1,0 +1,10 @@
+<!doctype html>
+<html>
+<head><title>Admin Panel</title></head>
+<body>
+    <h2>All Patient Conversations</h2>
+    {% for chat in chats %}
+        <p><strong>User {{ chat.user_id }}</strong>: {{ chat.message }}<br>↪ {{ chat.response }}</p>
+    {% endfor %}
+</body>
+</html>
